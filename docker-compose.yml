@@ -2,7 +2,7 @@ version: '3'
 
 services:
   nginx:
-    container_name: poject-nginx
+    container_name: project-nginx
     build: docker/nginx
     working_dir: /var/www/app
     ports:
