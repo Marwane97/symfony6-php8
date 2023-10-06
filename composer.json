@@ -3,6 +3,8 @@
     "license": "proprietary",
     "minimum-stability": "stable",
     "prefer-stable": true,
+    "name": "marodev/symfony6.3-php8.2",
+    "description": "Basic symfony6.3 project",
     "require": {
         "php": ">=8.2",
         "ext-ctype": "*",
