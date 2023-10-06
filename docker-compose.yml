@@ -3,28 +3,37 @@ version: '3'
 services:
   nginx:
     container_name: project-nginx
-    build: docker/nginx
-    working_dir: /var/www/app
+    build:
+      dockerfile: docker/nginx/Dockerfile
+      context: .
+    working_dir: /application
     ports:
       - "9969:80"
     volumes:
-      - ./:/var/www/app
-      - ./docker/nginx/default-compose.conf:/etc/nginx/conf.d/default-compose.conf
+      - ./var/nginx_logs:/var/log/nginx
     networks:
       - project-network
 
-  php:
+  php-fpm:
     container_name: project-fpm
-    build: docker/php
-    working_dir: /var/www/app
+    build:
+      dockerfile: docker/php-fpm/Dockerfile
+      context: .
+    working_dir: /application
+    restart: on-failure
     volumes:
-      - ./:/var/www/app
+      - .:/application:cached
+      - ./var/log:/application/var/log
+      - ~/.ssh/:/root/.ssh/
+      - app_var_cache:/application/var/cache
     networks:
       - project-network
 
   mysql:
     container_name: project-mysql
-    build: docker/mysql
+    build:
+      dockerfile: docker/mysql/Dockerfile
+      context: .
     restart: on-failure
     environment:
       MYSQL_ROOT_PASSWORD: "root"
@@ -35,17 +44,45 @@ services:
 
   phpmyadmin:
     container_name: project-phpmyadmin
-    build: docker/phpmyadmin
+    build:
+      dockerfile: docker/phpmyadmin/Dockerfile
+      context: .
     restart: on-failure
     ports:
-      - "7999:80"
+      - "7989:80"
     environment:
       - PMA_HOST=mysql
       - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - ./docker/phpmyadmin/upload.ini:/usr/local/etc/php/php.ini
+      - ./docker/phpmyadmin/upload.ini:/usr/local/etc/php-fpm/php.ini
     networks:
       - project-network
+
+  rabbitmq:
+    container_name: rabbitmq
+    build:
+      dockerfile: docker/rabbitmq/Dockerfile
+      context: .
+    restart: on-failure
+    ports:
+      - "15677:15672" # Management UI
+      - "5677:5672"   # Default RabbitMQ port
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - project-network
+
+  mailer:
+    image: schickling/mailcatcher
+    ports:
+      - "2525:1025" # SMTP
+      - "2080:1080" # Web UI
+    networks:
+      - project-network
+
+volumes:
+  app_var_cache: ~
 
 networks:
   project-network:
