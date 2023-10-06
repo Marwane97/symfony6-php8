@@ -1,6 +1,6 @@
 # symfony6-php8
 
-A dockerize Symfony 6, php8 skeleton project
+A dockerize Symfony 6.3, php8.2 skeleton project
 
 ## Installation
 
